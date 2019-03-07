@@ -12,10 +12,14 @@ namespace WordChain
         bool enableLoop = false;
         bool wordMode = false;
         bool charMode = false;
-        string outputFilePath = "solution.txt";
+        readonly string outputFilePath = "solution.txt";
         static void Main(string[] args)
         {
             Program p = new Program();
+            if (args.Length > 0)
+            {
+                p.ParseCommandLineArguments(args);
+            }
             p.GenerateChain();
         }
         void GenerateChain(bool byCommandLine = false, string[] args = null)
@@ -33,11 +37,11 @@ namespace WordChain
             List<string> chain = new List<string>();
             if (wordMode)
             {
-                chain = FindLongestChainByWord(words);
+                chain = FindLongestChain(words, 0, enableLoop);
             }
             if (charMode)
             {
-                chain = FindLongestChainByChar(words);
+                chain = FindLongestChain(words, 1, enableLoop);
             }
             OutputChain(chain);
         }
@@ -168,7 +172,9 @@ namespace WordChain
         private void ExitWithCause(string message)
         {
             Console.WriteLine(message);
-            System.Environment.Exit(1);
+            Console.WriteLine("please re-run the program and try again");
+            Console.ReadKey();
+            Environment.Exit(1);
         }
         private string ReadContentFromFile()
         {
@@ -193,17 +199,81 @@ namespace WordChain
             List<string> wordList = new List<string>();
             foreach (string word in words)
             {
-                wordList.Add(word.ToLower());
+                if (word.Length > 0)
+                {
+                    wordList.Add(word.ToLower());
+                }
             }
             return wordList;
         }
-        private List<string> FindLongestChainByWord(List<string> words)
+        private List<string> FindLongestChain(List<string> words, int mode, bool enableLoop, char last = '\0', List<string> current = null)
         {
-
-        }
-        private List<string> FindLongestChainByChar(List<string> words)
-        {
-
+            if (current == null)
+            {
+                current = new List<string>();
+            }
+            if (words.Count == 0)
+            {
+                return current;
+            }
+            List<List<string>> candicates = new List<List<string>>();
+            foreach (string word in words)
+            {
+                if (last == '\0' || word.StartsWith(last.ToString()))
+                {
+                    List<string> tempCurrent = current.GetRange(0, current.Count);
+                    List<string> tempWords = words.GetRange(0, words.Count);
+                    tempCurrent.Add(word);
+                    tempWords.Remove(word);
+                    candicates.Add(FindLongestChain(tempWords, mode, enableLoop, word[word.Length - 1], tempCurrent));
+                }
+            }
+            List<string> max = null;
+            int maxLength = 0;
+            foreach (List<string> candicate in candicates)
+            {
+                int length = 0;
+                bool valid = true;
+                for (int i = 0; i < candicate.Count; i++)
+                {
+                    if (i == 0 && head != '\0')
+                    {
+                        if (candicate[i][0] != head)
+                        {
+                            valid = false;
+                            break;
+                        }
+                    }
+                    if (i == candicate.Count - 1 && tail != '\0')
+                    {
+                        if (candicate[i][candicate[i].Length - 1] != tail)
+                        {
+                            valid = false;
+                            break;
+                        }
+                    }
+                }
+                if (valid)
+                {
+                    foreach (string word in candicate)
+                    {
+                        if (mode == 0)
+                        {
+                            length += 1;
+                        }
+                        else if (mode == 1)
+                        {
+                            length += word.Length;
+                        }
+                    }
+                    if (length > maxLength)
+                    {
+                        maxLength = length;
+                        max = candicate;
+                    }
+                }
+            }
+            return max ?? current;
         }
         private void OutputChain(List<string> chain)
         {
