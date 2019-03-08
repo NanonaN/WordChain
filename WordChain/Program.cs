@@ -21,18 +21,11 @@ namespace WordChain
             {
                 p.ParseCommandLineArguments(args);
             }
-            p.GenerateChain();
+            List<string> chain = p.GenerateChain();
+            p.OutputChain(chain);
         }
-        void GenerateChain(bool byCommandLine = false, string[] args = null)
+        List<string> GenerateChain()
         {
-            if (byCommandLine)
-            {
-                if (args == null)
-                {
-                    ExitWithCause("command line has got null arguments");
-                }
-                ParseCommandLineArguments(args);
-            }
             string content = ReadContentFromFile();
             List<string> words = DivideWord(content);
             List<string> chain = new List<string>();
@@ -45,7 +38,7 @@ namespace WordChain
             {
                 chain = FindLongestChain(words, 1);
             }
-            OutputChain(chain);
+            return chain;
         }
         Program()
         {
