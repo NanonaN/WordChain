@@ -227,6 +227,10 @@ namespace WordChain
             int maxLength = 0;
             foreach (List<string> candicate in candicates)
             {
+                if (candicate.Count < 2)
+                {
+                    continue;
+                }
                 int length = 0;
                 bool valid = true;
                 string firstWord = candicate[0];
