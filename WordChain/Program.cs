@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace WordChain
 {
@@ -35,6 +36,7 @@ namespace WordChain
             string content = ReadContentFromFile();
             List<string> words = DivideWord(content);
             List<string> chain = new List<string>();
+            words = words.Where((x, i) => words.FindIndex(y => y.Equals(x)) == i).ToList();
             if (wordMode)
             {
                 chain = FindLongestChain(words, 0, enableLoop);
