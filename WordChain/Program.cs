@@ -39,11 +39,11 @@ namespace WordChain
             words = words.Where((x, i) => words.FindIndex(y => y.Equals(x)) == i).ToList();
             if (wordMode)
             {
-                chain = FindLongestChain(words, 0, enableLoop);
+                chain = FindLongestChain(words, 0);
             }
             if (charMode)
             {
-                chain = FindLongestChain(words, 1, enableLoop);
+                chain = FindLongestChain(words, 1);
             }
             OutputChain(chain);
         }
@@ -208,7 +208,7 @@ namespace WordChain
             }
             return wordList;
         }
-        private List<string> FindLongestChain(List<string> words, int mode, bool enableLoop, char last = '\0', List<string> current = null)
+        private List<string> FindLongestChain(List<string> words, int mode, char last = '\0', List<string> current = null)
         {
             if (current == null)
             {
@@ -227,7 +227,7 @@ namespace WordChain
                     List<string> tempWords = words.GetRange(0, words.Count);
                     tempCurrent.Add(word);
                     tempWords.Remove(word);
-                    candicates.Add(FindLongestChain(tempWords, mode, enableLoop, word[word.Length - 1], tempCurrent));
+                    candicates.Add(FindLongestChain(tempWords, mode, word[word.Length - 1], tempCurrent));
                 }
             }
             List<string> max = null;
@@ -236,6 +236,12 @@ namespace WordChain
             {
                 int length = 0;
                 bool valid = true;
+                string firstWord = candicate[0];
+                string lastWord = candicate[candicate.Count - 1];
+                if (firstWord[0] == lastWord[lastWord.Length - 1] && !enableLoop)
+                {
+                    ExitWithCause("word ring detected but there is no -r flag");
+                }
                 for (int i = 0; i < candicate.Count; i++)
                 {
                     if (i == 0 && head != '\0')
