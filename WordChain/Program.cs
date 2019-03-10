@@ -63,7 +63,7 @@ namespace WordChain
         {
             return GenerateChain(1, words, len, result, head, tail, enable_loop);
         }
-        private List<string> GenerateChain()
+        public List<string> GenerateChain()
         {
             string content = ReadContentFromFile();
             List<string> words = DivideWord(content);
@@ -95,7 +95,7 @@ namespace WordChain
             }
             else
             {
-                ExitWithCause("program mode not provided");
+                ExceptWithCause(new ModeNotProvidedException("Program Mode Not Provided"));
             }
             this.inputFilePath = inputFilePath;
             this.head = head;
@@ -103,7 +103,7 @@ namespace WordChain
             this.enableLoop = enableLoop;
             this.outputFilePath = outputFilePath;
         }
-        private void ParseCommandLineArguments(string[] args)
+        public void ParseCommandLineArguments(string[] args)
         {
             for (int i = 0; i < args.Length; i++)
             {
@@ -111,17 +111,17 @@ namespace WordChain
                 {
                     if (args.Length <= i + 1)
                     {
-                        ExitWithCause("-w argument requires a file absolute path");
+                        ExceptWithCause(new ArgumentErrorException("The -w Argument Requires a File's Absolute Path"));
                     }
                     else
                     {
                         if (wordMode == true)
                         {
-                            ExitWithCause("-w argument cannot be used twice");
+                            ExceptWithCause(new ArgumentErrorException("The -w Argument Cannot be Used Twice"));
                         }
                         if (charMode == true)
                         {
-                            ExitWithCause("-w argument cannot be used together with -c argument");
+                            ExceptWithCause(new ArgumentErrorException("The -w Argument Cannot be Used Together with the -c Argument"));
                         }
                         inputFilePath = args[++i];
                         wordMode = true;
@@ -132,17 +132,17 @@ namespace WordChain
                 {
                     if (args.Length <= i + 1)
                     {
-                        ExitWithCause("-c argument requires a file absolute path");
+                        ExceptWithCause(new ArgumentErrorException("The -c Argument Requires a File's Absolute Path"));
                     }
                     else
                     {
                         if (charMode == true)
                         {
-                            ExitWithCause("-c argument cannot be used twice");
+                            ExceptWithCause(new ArgumentErrorException("The -c Argument Cannot be Used Twice"));
                         }
                         if (wordMode == true)
                         {
-                            ExitWithCause("-c argument cannot be used together with -w argument");
+                            ExceptWithCause(new ArgumentErrorException("The -c Argument Cannot be Used Together with the -w Argument"));
                         }
                         inputFilePath = args[++i];
                         charMode = true;
@@ -153,18 +153,18 @@ namespace WordChain
                 {
                     if (args.Length <= i + 1)
                     {
-                        ExitWithCause("-h argument requires a start letter");
+                        ExceptWithCause(new ArgumentErrorException("The -h Argument Requires a Start Letter"));
                     }
                     else
                     {
                         if (head != '\0')
                         {
-                            ExitWithCause("-h argument cannot be used twice");
+                            ExceptWithCause(new ArgumentErrorException("The -h Argument Cannot be Used Twice"));
                         }
                         string headString = args[++i];
                         if (headString.Length != 1 || !char.IsLetter(headString[0]))
                         {
-                            ExitWithCause("-h argument requires a start letter");
+                            ExceptWithCause(new ArgumentErrorException("The -h Argument Requires a Start Letter"));
                         }
                         head = headString[0];
                         continue;
@@ -174,18 +174,18 @@ namespace WordChain
                 {
                     if (args.Length <= i + 1)
                     {
-                        ExitWithCause("-t argument requires an end letter");
+                        ExceptWithCause(new ArgumentErrorException("The -t Argument Requires an End Letter"));
                     }
                     else
                     {
                         if (tail != '\0')
                         {
-                            ExitWithCause("-t argument cannot be used twice");
+                            ExceptWithCause(new ArgumentErrorException("The -t Argument Cannot be Used Twice"));
                         }
                         string tailString = args[++i];
                         if (tailString.Length != 1 || !char.IsLetter(tailString[0]))
                         {
-                            ExitWithCause("-t argument requires an end letter");
+                            ExceptWithCause(new ArgumentErrorException("The -t Argument Requires an End Letter"));
                         }
                         tail = tailString[0];
                         continue;
@@ -195,20 +195,21 @@ namespace WordChain
                 {
                     if (enableLoop)
                     {
-                        ExitWithCause("-r argument cannot be used twice");
+                        ExceptWithCause(new ArgumentErrorException("The -r Argument Cannot be Used Twice"));
                     }
                     enableLoop = true;
                     continue;
                 }
-                ExitWithCause("invalid argument" + args[i]);
+                ExceptWithCause(new ArgumentErrorException("Invalid Argument: " + args[i]));
             }
         }
-        private void ExitWithCause(string message)
+        private void ExceptWithCause(ProgramException exception)
         {
-            Console.WriteLine(message);
-            Console.WriteLine("please re-run the program and try again");
-            Console.ReadKey();
-            Environment.Exit(1);
+            Console.WriteLine(exception.Message);
+            Console.WriteLine("Please Re-run the Program and Try Again");
+            //Console.ReadKey();
+            //Environment.Exit(1);
+            throw exception;
         }
         private string ReadContentFromFile()
         {
@@ -218,7 +219,7 @@ namespace WordChain
         {
             if (!File.Exists(filePath))
             {
-                ExitWithCause("file " + filePath + " not found");
+                ExceptWithCause(new FileException("Input File " + filePath + " Not Found"));
             }
             string content = "";
             try
@@ -227,7 +228,7 @@ namespace WordChain
             }
             catch (Exception)
             {
-                ExitWithCause("unable to read from file " + filePath);
+                ExceptWithCause(new FileNotReadableException("Unable to Read From File " + filePath));
             }
             return content;
         }
@@ -299,7 +300,7 @@ namespace WordChain
                 string lastWord = candicate[candicate.Count - 1];
                 if (firstWord[0] == lastWord[lastWord.Length - 1] && !enableLoop)
                 {
-                    ExitWithCause("word ring detected but there is no -r flag");
+                    ExceptWithCause(new WordRingException("Word Ring Detected but There is no -r Flag"));
                 }
                 for (int i = 0; i < candicate.Count; i++)
                 {
@@ -342,7 +343,7 @@ namespace WordChain
             }
             return max ?? current;
         }
-        private void OutputChain(List<string> chain)
+        public void OutputChain(List<string> chain)
         {
             string[] result = chain.ToArray();
             try
@@ -351,7 +352,7 @@ namespace WordChain
             }
             catch (Exception e)
             {
-                ExitWithCause("Error Occured When Writing Result To File");
+                ExceptWithCause(new FileNotWritableException("Error Occured When Writing Result To File " + outputFilePath));
             }
         }
     }

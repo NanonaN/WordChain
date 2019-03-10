@@ -67,7 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\WordChain\WordChain.csproj">
-      <Project>{4E73A423-4414-4670-A7AB-9F935A83B183}</Project>
+      <Project>{4e73a423-4414-4670-a7ab-9f935a83b183}</Project>
       <Name>WordChain</Name>
     </ProjectReference>
   </ItemGroup>

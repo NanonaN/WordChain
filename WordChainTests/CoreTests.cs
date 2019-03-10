@@ -1,4 +1,6 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using WordChain;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 
 namespace WordChain.Tests
@@ -91,7 +93,7 @@ namespace WordChain.Tests
             List<string> result = ConvertToList(resultArray, len);
             CollectionAssert.AreEqual(expectedChain, result);
         }
-        private unsafe static char*[] CreateStringArray(int length = 100, int wordLength = 100)
+        private unsafe char*[] CreateStringArray(int length = 100, int wordLength = 100)
         {
             char*[] array = new char*[length];
             for (int i = 0; i < length; i++)
@@ -104,7 +106,7 @@ namespace WordChain.Tests
             }
             return array;
         }
-        private static unsafe List<string> ConvertToList(char*[] words, int len)
+        private unsafe List<string> ConvertToList(char*[] words, int len)
         {
             List<string> wordList = new List<string>();
             for (int i = 0; i < len; i++)
@@ -113,7 +115,7 @@ namespace WordChain.Tests
             }
             return wordList;
         }
-        private static unsafe char*[] ConvertToArray(List<string> words)
+        private unsafe char*[] ConvertToArray(List<string> words)
         {
             char*[] wordList = new char*[words.Count];
             for (int i = 0; i < words.Count; i++)
@@ -131,6 +133,76 @@ namespace WordChain.Tests
                 }
             }
             return wordList;
+        }
+
+        [TestMethod()]
+        public void ParseCommandLineArgumentsTest()
+        {
+            TestWrongArgs("-w");
+            TestWrongArgs("-c");
+            TestWrongArgs("-h");
+            TestWrongArgs("-t");
+            TestWrongArgs("-");
+            TestWrongArgs("-h 1");
+            TestWrongArgs("-t 233");
+            TestCorrectArgs("-w input.txt");
+            TestCorrectArgs("-c input.txt");
+            TestCorrectArgs("-w input.txt -h a");
+            TestCorrectArgs("-w input.txt -t b");
+            TestWrongArgs("abcdefg");
+        }
+        private void TestWrongArgs(string arguments)
+        {
+            string[] args = System.Text.RegularExpressions.Regex.Split(arguments, @"\s+");
+            Core core = new Core();
+            try
+            {
+                core.ParseCommandLineArguments(args);
+                Assert.Fail();
+            }
+            catch (ProgramException e)
+            {
+
+            }
+        }
+        private void TestCorrectArgs(string arguments)
+        {
+            string[] args = System.Text.RegularExpressions.Regex.Split(arguments, @"\s+");
+            Core core = new Core();
+            try
+            {
+                core.ParseCommandLineArguments(args);
+            }
+            catch (Exception e)
+            {
+                Assert.Fail();
+            }
+        }
+
+        [TestMethod()]
+        public void GenerateChainTest()
+        {
+            Core core = new Core();
+            string[] args = new string[]
+            {
+                "-w",
+                "not_exist.txt"
+            };
+            try
+            {
+                core.ParseCommandLineArguments(args);
+            }catch(ProgramException e)
+            {
+                Assert.Fail();
+            }
+            try
+            {
+                core.GenerateChain();
+                Assert.Fail();
+            }catch(ProgramException e)
+            {
+
+            }
         }
     }
 }
