@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace WordChain
 {
@@ -33,21 +34,26 @@ namespace WordChain
             }
             return wordList;
         }
+        private static unsafe int ConvertWordListToArray(List<string> wordList, char*[] words)
+        {
+            for (int i = 0; i < wordList.Count; i++)
+            {
+                char* wordPointer = words[i];
+                for (int j = 0; j < wordList[i].Length; j++)
+                {
+                    *wordPointer++ = wordList[i][j];
+                }
+                *wordPointer = '\0';
+            }
+            return wordList.Count;
+        }
         private static unsafe int GenerateChain(int mode, char*[] words, int len, char*[] result, char head, char tail, bool enable_loop)
         {
             Core core = new Core(head: head, tail: tail, enableLoop: enable_loop);
             List<string> wordList = core.ConvertWordArrayToList(words, len);
             List<string> resultWordList = core.FindLongestChain(wordList, mode);
-            for (int i = 0; i < resultWordList.Count; i++)
-            {
-                char* resultPointer = result[i];
-                for (int j = 0; j < resultWordList[i].Length; j++)
-                {
-                    *resultPointer++ = resultWordList[i][j];
-                }
-                *resultPointer = '\0';
-            }
-            return resultWordList.Count;
+            int resultLen = ConvertWordListToArray(resultWordList, result);
+            return resultLen;
         }
         public static unsafe int gen_chain_word(char*[] words, int len, char*[] result, char head, char tail, bool enable_loop)
         {
@@ -206,20 +212,43 @@ namespace WordChain
         }
         private string ReadContentFromFile()
         {
-            if (!File.Exists(inputFilePath))
+            return ReadContentFromFile(this.inputFilePath);
+        }
+        private string ReadContentFromFile(string filePath)
+        {
+            if (!File.Exists(filePath))
             {
-                ExitWithCause("file " + inputFilePath + " not found");
+                ExitWithCause("file " + filePath + " not found");
             }
             string content = "";
             try
             {
-                content = File.ReadAllText(inputFilePath);
+                content = File.ReadAllText(filePath);
             }
             catch (Exception)
             {
-                ExitWithCause("unable to read from file " + inputFilePath);
+                ExitWithCause("unable to read from file " + filePath);
             }
             return content;
+        }
+        public unsafe int read_string_from_file(char* file_path, char* content)
+        {
+            string filePath = new string(file_path);
+            string contentString = ReadContentFromFile(filePath);
+            int i;
+            for (i = 0; i < contentString.Length; i++)
+            {
+                content[i] = contentString[i];
+            }
+            content[i] = '\0';
+            return contentString.Length;
+        }
+        public unsafe int divide_string_by_word(char* content, char*[] words)
+        {
+            StringBuilder sb = new StringBuilder();
+            string contentString = new string(content);
+            List<string> wordList = DivideWord(contentString);
+            return ConvertWordListToArray(wordList, words);
         }
         private List<string> DivideWord(string content)
         {
