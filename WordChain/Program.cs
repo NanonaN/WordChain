@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace WordChain
 {
-    class Program
+    public class Core
     {
         string inputFilePath = "";
         char head = '\0';
@@ -16,15 +16,48 @@ namespace WordChain
         readonly string outputFilePath = "solution.txt";
         static void Main(string[] args)
         {
-            Program p = new Program();
+            Core core = new Core();
             if (args.Length > 0)
             {
-                p.ParseCommandLineArguments(args);
+                core.ParseCommandLineArguments(args);
             }
-            List<string> chain = p.GenerateChain();
-            p.OutputChain(chain);
+            List<string> chain = core.GenerateChain();
+            core.OutputChain(chain);
         }
-        List<string> GenerateChain()
+        private unsafe List<string> ConvertWordArrayToList(char*[] words, int len)
+        {
+            List<string> wordList = new List<string>();
+            for (int i = 0; i < len; i++)
+            {
+                wordList.Add(new string(words[i]).ToLower());
+            }
+            return wordList;
+        }
+        private static unsafe int GenerateChain(int mode, char*[] words, int len, char*[] result, char head, char tail, bool enable_loop)
+        {
+            Core core = new Core(head: head, tail: tail, enableLoop: enable_loop);
+            List<string> wordList = core.ConvertWordArrayToList(words, len);
+            List<string> resultWordList = core.FindLongestChain(wordList, mode);
+            for (int i = 0; i < resultWordList.Count; i++)
+            {
+                char* resultPointer = result[i];
+                for (int j = 0; j < resultWordList[i].Length; j++)
+                {
+                    *resultPointer++ = resultWordList[i][j];
+                }
+                *resultPointer = '\0';
+            }
+            return resultWordList.Count;
+        }
+        public static unsafe int gen_chain_word(char*[] words, int len, char*[] result, char head, char tail, bool enable_loop)
+        {
+            return GenerateChain(0, words, len, result, head, tail, enable_loop);
+        }
+        public static unsafe int gen_chain_char(char*[] words, int len, char*[] result, char head, char tail, bool enable_loop)
+        {
+            return GenerateChain(1, words, len, result, head, tail, enable_loop);
+        }
+        private List<string> GenerateChain()
         {
             string content = ReadContentFromFile();
             List<string> words = DivideWord(content);
@@ -40,11 +73,11 @@ namespace WordChain
             }
             return chain;
         }
-        Program()
+        public Core()
         {
 
         }
-        Program(string inputFilePath, int mode = 0, char head = '\0', char tail = '\0', bool enableLoop = false, string outputFilePath = @"solution.txt")
+        public Core(string inputFilePath = "", int mode = 0, char head = '\0', char tail = '\0', bool enableLoop = false, string outputFilePath = @"solution.txt")
         {
             if (mode == 0)
             {
@@ -61,10 +94,10 @@ namespace WordChain
             this.inputFilePath = inputFilePath;
             this.head = head;
             this.tail = tail;
-            this.enableLoop = false;
+            this.enableLoop = enableLoop;
             this.outputFilePath = outputFilePath;
         }
-        void ParseCommandLineArguments(string[] args)
+        private void ParseCommandLineArguments(string[] args)
         {
             for (int i = 0; i < args.Length; i++)
             {
