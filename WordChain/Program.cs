@@ -11,30 +11,25 @@ namespace WordChain
         private readonly bool _inputIsFile = true;
         private char _head = '\0';
         private char _tail = '\0';
-        private bool _enableLoop = false;
-        private bool _wordMode = false;
-        private bool _charMode = false;
+        private bool _enableLoop;
+        private bool _wordMode;
+        private bool _charMode;
         private readonly string _outputFilePath = "solution.txt";
         private static void Main(string[] args)
         {
-            var core = new Core();
-            if (args.Length > 0)
-            {
-                core.ParseCommandLineArguments(args);
-            }
-            var chain = core.GenerateChain();
-            core.OutputChain(chain);
+            var core = new Core(args);
+            core.GenerateChain(true);
         }
         private static unsafe List<string> ConvertWordArrayToList(char*[] words, int len)
         {
             var wordList = new List<string>();
-            for (int i = 0; i < len; i++)
+            for (var i = 0; i < len; i++)
             {
                 wordList.Add(new string(words[i]).ToLower());
             }
             return wordList;
         }
-        private static unsafe int ConvertWordListToArray(List<string> wordList, char*[] words)
+        private static unsafe int ConvertWordListToArray(IReadOnlyList<string> wordList, char*[] words)
         {
             for (var i = 0; i < wordList.Count; i++)
             {
@@ -63,7 +58,7 @@ namespace WordChain
         {
             return GenerateChain(1, words, len, result, head, tail, enable_loop);
         }
-        public List<string> GenerateChain()
+        public List<string> GenerateChain(bool outputToFile = false)
         {
             var content = _inputIsFile ? ReadContentFromFile() : _input;
             var words = DivideWord(content);
@@ -77,11 +72,15 @@ namespace WordChain
             {
                 chain = FindLongestChain(words, 1);
             }
+            if (outputToFile)
+            {
+                OutputChain(chain);
+            }
             return chain;
         }
-        public Core()
+        public Core(string[] args)
         {
-
+            ParseCommandLineArguments(args);
         }
         public Core(string input = "", int mode = 0, char head = '\0', char tail = '\0', bool enableLoop = false, string outputFilePath = @"solution.txt", bool inputIsFile = true)
         {
@@ -104,7 +103,7 @@ namespace WordChain
             _enableLoop = enableLoop;
             _outputFilePath = outputFilePath;
         }
-        public void ParseCommandLineArguments(string[] args)
+        private void ParseCommandLineArguments(string[] args)
         {
             for (var i = 0; i < args.Length; i++)
             {
@@ -183,7 +182,7 @@ namespace WordChain
                         {
                             ExceptWithCause(new ArgumentErrorException("The -t Argument Cannot be Used Twice"));
                         }
-                        string tailString = args[++i];
+                        var tailString = args[++i];
                         if (tailString.Length != 1 || !char.IsLetter(tailString[0]))
                         {
                             ExceptWithCause(new ArgumentErrorException("The -t Argument Requires an End Letter"));
@@ -216,13 +215,13 @@ namespace WordChain
         {
             return ReadContentFromFile(this._input);
         }
-        private string ReadContentFromFile(string filePath)
+        private static string ReadContentFromFile(string filePath)
         {
             if (!File.Exists(filePath))
             {
                 ExceptWithCause(new InputFileException("Input File " + filePath + " Not Found"));
             }
-            string content = "";
+            var content = "";
             try
             {
                 content = File.ReadAllText(filePath);
@@ -232,24 +231,6 @@ namespace WordChain
                 ExceptWithCause(new FileNotReadableException("Unable to Read From File " + filePath));
             }
             return content;
-        }
-        public unsafe int read_string_from_file(char* file_path, char* content)
-        {
-            var filePath = new string(file_path);
-            var contentString = ReadContentFromFile(filePath);
-            int i;
-            for (i = 0; i < contentString.Length; i++)
-            {
-                content[i] = contentString[i];
-            }
-            content[i] = '\0';
-            return contentString.Length;
-        }
-        public unsafe int divide_string_by_word(char* content, char*[] words)
-        {
-            var contentString = new string(content);
-            var wordList = DivideWord(contentString);
-            return ConvertWordListToArray(wordList, words);
         }
         private static List<string> DivideWord(string content)
         {
@@ -312,9 +293,7 @@ namespace WordChain
                 if (!valid) continue;
                 foreach (var word in candidate)
                 {
-                    if (mode == 0)
-                        length += 1;
-                    else if (mode == 1) length += word.Length;
+                    length += mode == 0 ? 1 : mode == 1 ? word.Length : 0;
                 }
 
                 if (length <= maxLength) continue;
@@ -323,7 +302,7 @@ namespace WordChain
             }
             return max ?? current;
         }
-        public void OutputChain(List<string> chain)
+        private void OutputChain(List<string> chain)
         {
             try
             {

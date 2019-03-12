@@ -160,10 +160,9 @@ namespace WordChainTests
         private static void TestWrongArgs(string arguments)
         {
             var args = System.Text.RegularExpressions.Regex.Split(arguments, @"\s+");
-            var core = new Core();
             try
             {
-                core.ParseCommandLineArguments(args);
+                var core = new Core(args);
                 Assert.Fail();
             }
             catch (ProgramException)
@@ -174,10 +173,9 @@ namespace WordChainTests
         private static void TestCorrectArgs(string arguments)
         {
             var args = System.Text.RegularExpressions.Regex.Split(arguments, @"\s+");
-            var core = new Core();
             try
             {
-                core.ParseCommandLineArguments(args);
+                var core = new Core(args);
             }
             catch (Exception)
             {
@@ -188,7 +186,7 @@ namespace WordChainTests
         [TestMethod()]
         public void GenerateChainTest()
         {
-            var core = new Core();
+            Core core = null;
             var args = new string[]
             {
                 "-w",
@@ -196,8 +194,9 @@ namespace WordChainTests
             };
             try
             {
-                core.ParseCommandLineArguments(args);
-            }catch(ProgramException)
+                core = new Core(args);
+            }
+            catch (ProgramException)
             {
                 Assert.Fail();
             }
@@ -205,7 +204,8 @@ namespace WordChainTests
             {
                 core.GenerateChain();
                 Assert.Fail();
-            }catch(ProgramException)
+            }
+            catch (ProgramException)
             {
 
             }
