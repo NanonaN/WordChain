@@ -44,6 +44,7 @@ namespace WordChain
         }
         private static unsafe int GenerateChain(int mode, char*[] words, int len, char*[] result, char head, char tail, bool enable_loop)
         {
+            CheckValid(head, tail);
             var core = new Core(head: head, tail: tail, enableLoop: enable_loop);
             var wordList = ConvertWordArrayToList(words, len);
             var resultWordList = core.FindLongestChain(wordList, mode);
@@ -58,8 +59,17 @@ namespace WordChain
         {
             return GenerateChain(1, words, len, result, head, tail, enable_loop);
         }
+
+        private static void CheckValid(char head, char tail)
+        {
+            if (head != '\0' && !char.IsLetter(head) || tail != '\0' && !char.IsLetter(tail))
+            {
+                ExceptWithCause(new ArgumentErrorException("The -h and -t Argument Must be Followed by an English Letter"));
+            }
+        }
         public List<string> GenerateChain(bool outputToFile = false)
         {
+            CheckValid(_head, _tail);
             var content = _inputIsFile ? ReadContentFromFile() : _input;
             var words = DivideWord(content);
             var chain = new List<string>();
@@ -78,7 +88,7 @@ namespace WordChain
             }
             return chain;
         }
-        public Core(string[] args)
+        public Core(IReadOnlyList<string> args)
         {
             ParseCommandLineArguments(args);
         }
@@ -166,7 +176,7 @@ namespace WordChain
                         {
                             ExceptWithCause(new ArgumentErrorException("The -h Argument Requires a Start Letter"));
                         }
-                        _head = headString[0];
+                        _head = headString.ToLower()[0];
                         continue;
                     }
                 }
@@ -187,7 +197,7 @@ namespace WordChain
                         {
                             ExceptWithCause(new ArgumentErrorException("The -t Argument Requires an End Letter"));
                         }
-                        _tail = tailString[0];
+                        _tail = tailString.ToLower()[0];
                         continue;
                     }
                 }
@@ -213,7 +223,7 @@ namespace WordChain
         }
         private string ReadContentFromFile()
         {
-            return ReadContentFromFile(this._input);
+            return ReadContentFromFile(_input);
         }
         private static string ReadContentFromFile(string filePath)
         {
@@ -302,7 +312,7 @@ namespace WordChain
             }
             return max ?? current;
         }
-        private void OutputChain(List<string> chain)
+        private void OutputChain(IEnumerable<string> chain)
         {
             try
             {
