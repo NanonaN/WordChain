@@ -156,6 +156,20 @@ namespace WordChainTests
             TestCorrectArgs("-w input.txt -h a");
             TestCorrectArgs("-w input.txt -t b");
             TestWrongArgs("abcdefg");
+            TestWrongArgs("-w input.txt -h 9");
+            TestWrongArgs("-w input.txt -t 0");
+            TestWrongArgs("-c input.txt -h 7 -t 1");
+            TestWrongArgs("-w input.txt -h 123");
+            TestWrongArgs("-c input.txt -t 321");
+            TestWrongArgs("-h a");
+            TestWrongArgs("-w input.txt -w input.txt");
+            TestWrongArgs("-w input.txt -c input.txt");
+            TestWrongArgs("-c input.txt -c input.txt");
+            TestWrongArgs("-c input.txt -w input.txt");
+            TestWrongArgs("-w input.txt -h a -h c");
+            TestWrongArgs("-w input.txt -t a -t c");
+            TestWrongArgs("-w input.txt -r -r");
+            TestCorrectArgs("-w input.txt -r");
         }
         private static void TestWrongArgs(string arguments)
         {
@@ -187,7 +201,7 @@ namespace WordChainTests
         public void GenerateChainTest()
         {
             Core core = null;
-            var args = new string[]
+            var args = new[]
             {
                 "-w",
                 "not_exist.txt"
@@ -203,6 +217,68 @@ namespace WordChainTests
             try
             {
                 core.GenerateChain();
+                Assert.Fail();
+            }
+            catch (ProgramException)
+            {
+
+            }
+            core = new Core("input.txt", 1, enableLoop: true, inputIsFile: true);
+            var result = core.GenerateChain(true);
+            CollectionAssert.AreEqual(result, _wordChain2WithC);
+            core = new Core("input.txt", 1, head: '9', inputIsFile: true);
+            try
+            {
+                result = core.GenerateChain();
+                Assert.Fail();
+            }
+            catch (ProgramException)
+            {
+
+            }
+            core = new Core("input.txt", mode: 0, tail: '0');
+            try
+            {
+                result = core.GenerateChain();
+                Assert.Fail();
+            }
+            catch (ProgramException)
+            {
+
+            }
+            core = new Core("input.txt", mode: 0, head: '0', tail: '0');
+            try
+            {
+                result = core.GenerateChain();
+                Assert.Fail();
+            }
+            catch (ProgramException)
+            {
+
+            }
+            core = new Core("input1.txt");
+            try
+            {
+                result = core.GenerateChain();
+                Assert.Fail();
+            }
+            catch (ProgramException)
+            {
+
+            }
+            core = new Core("abc cde", outputFilePath: @"K:\test\solution.txt", inputIsFile: false);
+            try
+            {
+                result = core.GenerateChain(true);
+                Assert.Fail();
+            }
+            catch (ProgramException)
+            {
+
+            }
+            try
+            {
+                core = new Core("abc cde", mode: 233, outputFilePath: @"K:\test\solution.txt", inputIsFile: false);
                 Assert.Fail();
             }
             catch (ProgramException)

@@ -212,6 +212,11 @@ namespace WordChain
                 }
                 ExceptWithCause(new ArgumentErrorException("Invalid Argument: " + args[i]));
             }
+
+            if (!_wordMode && !_charMode)
+            {
+                ExceptWithCause(new ModeNotProvidedException("No Mode are Provided in the Arguments"));
+            }
         }
         private static void ExceptWithCause(ProgramException exception)
         {
