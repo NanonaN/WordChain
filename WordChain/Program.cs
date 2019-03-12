@@ -2,32 +2,32 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace WordChain
 {
     public class Core
     {
-        string inputFilePath = "";
-        char head = '\0';
-        char tail = '\0';
-        bool enableLoop = false;
-        bool wordMode = false;
-        bool charMode = false;
-        readonly string outputFilePath = "solution.txt";
-        static void Main(string[] args)
+        private string _input = "";
+        private readonly bool _inputIsFile = true;
+        private char _head = '\0';
+        private char _tail = '\0';
+        private bool _enableLoop = false;
+        private bool _wordMode = false;
+        private bool _charMode = false;
+        private readonly string _outputFilePath = "solution.txt";
+        private static void Main(string[] args)
         {
-            Core core = new Core();
+            var core = new Core();
             if (args.Length > 0)
             {
                 core.ParseCommandLineArguments(args);
             }
-            List<string> chain = core.GenerateChain();
+            var chain = core.GenerateChain();
             core.OutputChain(chain);
         }
-        private unsafe List<string> ConvertWordArrayToList(char*[] words, int len)
+        private static unsafe List<string> ConvertWordArrayToList(char*[] words, int len)
         {
-            List<string> wordList = new List<string>();
+            var wordList = new List<string>();
             for (int i = 0; i < len; i++)
             {
                 wordList.Add(new string(words[i]).ToLower());
@@ -36,10 +36,10 @@ namespace WordChain
         }
         private static unsafe int ConvertWordListToArray(List<string> wordList, char*[] words)
         {
-            for (int i = 0; i < wordList.Count; i++)
+            for (var i = 0; i < wordList.Count; i++)
             {
-                char* wordPointer = words[i];
-                for (int j = 0; j < wordList[i].Length; j++)
+                var wordPointer = words[i];
+                for (var j = 0; j < wordList[i].Length; j++)
                 {
                     *wordPointer++ = wordList[i][j];
                 }
@@ -49,10 +49,10 @@ namespace WordChain
         }
         private static unsafe int GenerateChain(int mode, char*[] words, int len, char*[] result, char head, char tail, bool enable_loop)
         {
-            Core core = new Core(head: head, tail: tail, enableLoop: enable_loop);
-            List<string> wordList = core.ConvertWordArrayToList(words, len);
-            List<string> resultWordList = core.FindLongestChain(wordList, mode);
-            int resultLen = ConvertWordListToArray(resultWordList, result);
+            var core = new Core(head: head, tail: tail, enableLoop: enable_loop);
+            var wordList = ConvertWordArrayToList(words, len);
+            var resultWordList = core.FindLongestChain(wordList, mode);
+            var resultLen = ConvertWordListToArray(resultWordList, result);
             return resultLen;
         }
         public static unsafe int gen_chain_word(char*[] words, int len, char*[] result, char head, char tail, bool enable_loop)
@@ -65,15 +65,15 @@ namespace WordChain
         }
         public List<string> GenerateChain()
         {
-            string content = ReadContentFromFile();
-            List<string> words = DivideWord(content);
-            List<string> chain = new List<string>();
+            var content = _inputIsFile ? ReadContentFromFile() : _input;
+            var words = DivideWord(content);
+            var chain = new List<string>();
             words = words.Where((x, i) => words.FindIndex(y => y.Equals(x)) == i).ToList();
-            if (wordMode)
+            if (_wordMode)
             {
                 chain = FindLongestChain(words, 0);
             }
-            if (charMode)
+            if (_charMode)
             {
                 chain = FindLongestChain(words, 1);
             }
@@ -83,29 +83,30 @@ namespace WordChain
         {
 
         }
-        public Core(string inputFilePath = "", int mode = 0, char head = '\0', char tail = '\0', bool enableLoop = false, string outputFilePath = @"solution.txt")
+        public Core(string input = "", int mode = 0, char head = '\0', char tail = '\0', bool enableLoop = false, string outputFilePath = @"solution.txt", bool inputIsFile = true)
         {
-            if (mode == 0)
+            switch (mode)
             {
-                wordMode = true;
+                case 0:
+                    _wordMode = true;
+                    break;
+                case 1:
+                    _charMode = true;
+                    break;
+                default:
+                    ExceptWithCause(new ModeNotProvidedException("Program Mode Not Provided"));
+                    break;
             }
-            else if (mode == 1)
-            {
-                charMode = true;
-            }
-            else
-            {
-                ExceptWithCause(new ModeNotProvidedException("Program Mode Not Provided"));
-            }
-            this.inputFilePath = inputFilePath;
-            this.head = head;
-            this.tail = tail;
-            this.enableLoop = enableLoop;
-            this.outputFilePath = outputFilePath;
+            _input = input;
+            _inputIsFile = inputIsFile;
+            _head = head;
+            _tail = tail;
+            _enableLoop = enableLoop;
+            _outputFilePath = outputFilePath;
         }
         public void ParseCommandLineArguments(string[] args)
         {
-            for (int i = 0; i < args.Length; i++)
+            for (var i = 0; i < args.Length; i++)
             {
                 if (args[i].Equals("-w"))
                 {
@@ -115,16 +116,16 @@ namespace WordChain
                     }
                     else
                     {
-                        if (wordMode == true)
+                        if (_wordMode == true)
                         {
                             ExceptWithCause(new ArgumentErrorException("The -w Argument Cannot be Used Twice"));
                         }
-                        if (charMode == true)
+                        if (_charMode == true)
                         {
                             ExceptWithCause(new ArgumentErrorException("The -w Argument Cannot be Used Together with the -c Argument"));
                         }
-                        inputFilePath = args[++i];
-                        wordMode = true;
+                        _input = args[++i];
+                        _wordMode = true;
                         continue;
                     }
                 }
@@ -136,16 +137,16 @@ namespace WordChain
                     }
                     else
                     {
-                        if (charMode == true)
+                        if (_charMode == true)
                         {
                             ExceptWithCause(new ArgumentErrorException("The -c Argument Cannot be Used Twice"));
                         }
-                        if (wordMode == true)
+                        if (_wordMode == true)
                         {
                             ExceptWithCause(new ArgumentErrorException("The -c Argument Cannot be Used Together with the -w Argument"));
                         }
-                        inputFilePath = args[++i];
-                        charMode = true;
+                        _input = args[++i];
+                        _charMode = true;
                         continue;
                     }
                 }
@@ -157,7 +158,7 @@ namespace WordChain
                     }
                     else
                     {
-                        if (head != '\0')
+                        if (_head != '\0')
                         {
                             ExceptWithCause(new ArgumentErrorException("The -h Argument Cannot be Used Twice"));
                         }
@@ -166,7 +167,7 @@ namespace WordChain
                         {
                             ExceptWithCause(new ArgumentErrorException("The -h Argument Requires a Start Letter"));
                         }
-                        head = headString[0];
+                        _head = headString[0];
                         continue;
                     }
                 }
@@ -178,7 +179,7 @@ namespace WordChain
                     }
                     else
                     {
-                        if (tail != '\0')
+                        if (_tail != '\0')
                         {
                             ExceptWithCause(new ArgumentErrorException("The -t Argument Cannot be Used Twice"));
                         }
@@ -187,23 +188,23 @@ namespace WordChain
                         {
                             ExceptWithCause(new ArgumentErrorException("The -t Argument Requires an End Letter"));
                         }
-                        tail = tailString[0];
+                        _tail = tailString[0];
                         continue;
                     }
                 }
                 if (args[i].Equals("-r"))
                 {
-                    if (enableLoop)
+                    if (_enableLoop)
                     {
                         ExceptWithCause(new ArgumentErrorException("The -r Argument Cannot be Used Twice"));
                     }
-                    enableLoop = true;
+                    _enableLoop = true;
                     continue;
                 }
                 ExceptWithCause(new ArgumentErrorException("Invalid Argument: " + args[i]));
             }
         }
-        private void ExceptWithCause(ProgramException exception)
+        private static void ExceptWithCause(ProgramException exception)
         {
             Console.WriteLine(exception.Message);
             Console.WriteLine("Please Re-run the Program and Try Again");
@@ -213,13 +214,13 @@ namespace WordChain
         }
         private string ReadContentFromFile()
         {
-            return ReadContentFromFile(this.inputFilePath);
+            return ReadContentFromFile(this._input);
         }
         private string ReadContentFromFile(string filePath)
         {
             if (!File.Exists(filePath))
             {
-                ExceptWithCause(new FileException("Input File " + filePath + " Not Found"));
+                ExceptWithCause(new InputFileException("Input File " + filePath + " Not Found"));
             }
             string content = "";
             try
@@ -234,8 +235,8 @@ namespace WordChain
         }
         public unsafe int read_string_from_file(char* file_path, char* content)
         {
-            string filePath = new string(file_path);
-            string contentString = ReadContentFromFile(filePath);
+            var filePath = new string(file_path);
+            var contentString = ReadContentFromFile(filePath);
             int i;
             for (i = 0; i < contentString.Length; i++)
             {
@@ -246,23 +247,14 @@ namespace WordChain
         }
         public unsafe int divide_string_by_word(char* content, char*[] words)
         {
-            StringBuilder sb = new StringBuilder();
-            string contentString = new string(content);
-            List<string> wordList = DivideWord(contentString);
+            var contentString = new string(content);
+            var wordList = DivideWord(contentString);
             return ConvertWordListToArray(wordList, words);
         }
-        private List<string> DivideWord(string content)
+        private static List<string> DivideWord(string content)
         {
-            string[] words = System.Text.RegularExpressions.Regex.Split(content, @"[^a-zA-Z]+");
-            List<string> wordList = new List<string>();
-            foreach (string word in words)
-            {
-                if (word.Length > 0)
-                {
-                    wordList.Add(word.ToLower());
-                }
-            }
-            return wordList;
+            var words = System.Text.RegularExpressions.Regex.Split(content, @"[^a-zA-Z]+");
+            return (from word in words where word.Length > 0 select word.ToLower()).ToList();
         }
         private List<string> FindLongestChain(List<string> words, int mode, char last = '\0', List<string> current = null)
         {
@@ -274,85 +266,72 @@ namespace WordChain
             {
                 return current;
             }
-            List<List<string>> candicates = new List<List<string>>();
-            foreach (string word in words)
+            var candidates = new List<List<string>>();
+            foreach (var word in words)
             {
-                if (last == '\0' || word.StartsWith(last.ToString()))
-                {
-                    List<string> tempCurrent = current.GetRange(0, current.Count);
-                    List<string> tempWords = words.GetRange(0, words.Count);
-                    tempCurrent.Add(word);
-                    tempWords.Remove(word);
-                    candicates.Add(FindLongestChain(tempWords, mode, word[word.Length - 1], tempCurrent));
-                }
+                if (last != '\0' && !word.StartsWith(last.ToString())) continue;
+                var tempCurrent = current.GetRange(0, current.Count);
+                var tempWords = words.GetRange(0, words.Count);
+                tempCurrent.Add(word);
+                tempWords.Remove(word);
+                candidates.Add(FindLongestChain(tempWords, mode, word[word.Length - 1], tempCurrent));
             }
             List<string> max = null;
-            int maxLength = 0;
-            foreach (List<string> candicate in candicates)
+            var maxLength = 0;
+            foreach (var candidate in candidates)
             {
-                if (candicate.Count < 2)
+                if (candidate.Count < 2)
                 {
                     continue;
                 }
-                int length = 0;
-                bool valid = true;
-                string firstWord = candicate[0];
-                string lastWord = candicate[candicate.Count - 1];
-                if (firstWord[0] == lastWord[lastWord.Length - 1] && !enableLoop)
+                var length = 0;
+                var valid = true;
+                var firstWord = candidate[0];
+                var lastWord = candidate[candidate.Count - 1];
+                if (firstWord[0] == lastWord[lastWord.Length - 1] && !_enableLoop)
                 {
                     ExceptWithCause(new WordRingException("Word Ring Detected but There is no -r Flag"));
                 }
-                for (int i = 0; i < candicate.Count; i++)
+                for (var i = 0; i < candidate.Count; i++)
                 {
-                    if (i == 0 && head != '\0')
+                    if (i == 0 && _head != '\0')
                     {
-                        if (candicate[i][0] != head)
+                        if (candidate[i][0] != _head)
                         {
                             valid = false;
                             break;
                         }
                     }
-                    if (i == candicate.Count - 1 && tail != '\0')
-                    {
-                        if (candicate[i][candicate[i].Length - 1] != tail)
-                        {
-                            valid = false;
-                            break;
-                        }
-                    }
+
+                    if (i != candidate.Count - 1 || _tail == '\0') continue;
+                    if (candidate[i][candidate[i].Length - 1] == _tail) continue;
+                    valid = false;
+                    break;
                 }
-                if (valid)
+
+                if (!valid) continue;
+                foreach (var word in candidate)
                 {
-                    foreach (string word in candicate)
-                    {
-                        if (mode == 0)
-                        {
-                            length += 1;
-                        }
-                        else if (mode == 1)
-                        {
-                            length += word.Length;
-                        }
-                    }
-                    if (length > maxLength)
-                    {
-                        maxLength = length;
-                        max = candicate;
-                    }
+                    if (mode == 0)
+                        length += 1;
+                    else if (mode == 1) length += word.Length;
                 }
+
+                if (length <= maxLength) continue;
+                maxLength = length;
+                max = candidate;
             }
             return max ?? current;
         }
         public void OutputChain(List<string> chain)
         {
-            string[] result = chain.ToArray();
             try
             {
-                File.WriteAllLines(outputFilePath, chain);
+                File.WriteAllLines(_outputFilePath, chain);
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                ExceptWithCause(new FileNotWritableException("Error Occured When Writing Result To File " + outputFilePath));
+                ExceptWithCause(new FileNotWritableException("Error Occured When Writing Result To File " + _outputFilePath));
             }
         }
     }
