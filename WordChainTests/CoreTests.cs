@@ -157,7 +157,7 @@ namespace WordChainTests
             TestCorrectArgs("-w input.txt -t b");
             TestWrongArgs("abcdefg");
         }
-        private void TestWrongArgs(string arguments)
+        private static void TestWrongArgs(string arguments)
         {
             var args = System.Text.RegularExpressions.Regex.Split(arguments, @"\s+");
             var core = new Core();
