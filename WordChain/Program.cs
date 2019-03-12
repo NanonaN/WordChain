@@ -103,23 +103,23 @@ namespace WordChain
             _enableLoop = enableLoop;
             _outputFilePath = outputFilePath;
         }
-        private void ParseCommandLineArguments(string[] args)
+        private void ParseCommandLineArguments(IReadOnlyList<string> args)
         {
-            for (var i = 0; i < args.Length; i++)
+            for (var i = 0; i < args.Count; i++)
             {
                 if (args[i].Equals("-w"))
                 {
-                    if (args.Length <= i + 1)
+                    if (args.Count <= i + 1)
                     {
                         ExceptWithCause(new ArgumentErrorException("The -w Argument Requires a File's Absolute Path"));
                     }
                     else
                     {
-                        if (_wordMode == true)
+                        if (_wordMode)
                         {
                             ExceptWithCause(new ArgumentErrorException("The -w Argument Cannot be Used Twice"));
                         }
-                        if (_charMode == true)
+                        if (_charMode)
                         {
                             ExceptWithCause(new ArgumentErrorException("The -w Argument Cannot be Used Together with the -c Argument"));
                         }
@@ -130,17 +130,17 @@ namespace WordChain
                 }
                 if (args[i].Equals("-c"))
                 {
-                    if (args.Length <= i + 1)
+                    if (args.Count <= i + 1)
                     {
                         ExceptWithCause(new ArgumentErrorException("The -c Argument Requires a File's Absolute Path"));
                     }
                     else
                     {
-                        if (_charMode == true)
+                        if (_charMode)
                         {
                             ExceptWithCause(new ArgumentErrorException("The -c Argument Cannot be Used Twice"));
                         }
-                        if (_wordMode == true)
+                        if (_wordMode)
                         {
                             ExceptWithCause(new ArgumentErrorException("The -c Argument Cannot be Used Together with the -w Argument"));
                         }
@@ -151,7 +151,7 @@ namespace WordChain
                 }
                 if (args[i].Equals("-h"))
                 {
-                    if (args.Length <= i + 1)
+                    if (args.Count <= i + 1)
                     {
                         ExceptWithCause(new ArgumentErrorException("The -h Argument Requires a Start Letter"));
                     }
@@ -161,7 +161,7 @@ namespace WordChain
                         {
                             ExceptWithCause(new ArgumentErrorException("The -h Argument Cannot be Used Twice"));
                         }
-                        string headString = args[++i];
+                        var headString = args[++i];
                         if (headString.Length != 1 || !char.IsLetter(headString[0]))
                         {
                             ExceptWithCause(new ArgumentErrorException("The -h Argument Requires a Start Letter"));
@@ -172,7 +172,7 @@ namespace WordChain
                 }
                 if (args[i].Equals("-t"))
                 {
-                    if (args.Length <= i + 1)
+                    if (args.Count <= i + 1)
                     {
                         ExceptWithCause(new ArgumentErrorException("The -t Argument Requires an End Letter"));
                     }
