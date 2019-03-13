@@ -256,6 +256,16 @@ namespace WordChainTests
             {
 
             }
+            core = new Core("inputr.txt", mode: 0);
+            try
+            {
+                result = core.GenerateChain();
+                Assert.Fail();
+            }
+            catch (ProgramException)
+            {
+
+            }
             core = new Core("input1.txt");
             try
             {
